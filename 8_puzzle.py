@@ -17,6 +17,13 @@ class TreeNode:
         self.downChild = down
         self.parent = parent
 
+    def __iter__(self):
+        if self.payload != 0:
+            for i in range(3):
+                print(self.payload[i])
+        else:
+            print(0)
+
     def hasLeftChild(self):
         return self.leftChild
 
@@ -85,28 +92,36 @@ def print1(lst):
         print(0)
 
 
-def seeker(lst):  # get position of empty or '0' (row,index)
+def seeker(lst,target):  # get position of empty or '0' (row,index)
     for i in range(3):
         try:
-            x = (lst[i].index(0))
+            x = (lst[i].index(target))
             return (i, x)
         except ValueError:
             x = 0
 
 
-def position_tester(node, index):
+def position_tester(puzzle,node, index):
     left=right_to_left(node.payload,index)
     right=left_to_right(node.payload,index)
     up=down_to_up(node.payload,index)
     down=up_to_down(node.payload,index)
     if left!=0:
-        node.leftChild=left
+        puzzle.cost+=1
+        z1=TreeNode(node.key+1,node.cost+1,left,None,None,None,None,node)
+        node.leftChild=z1
     if right!=0:
-        node.rightChild=right
+        puzzle.cost+=1
+        z2=TreeNode(node.key+1,node.cost+1,right,None,None,None,None,node)
+        node.rightChild=z2
     if up!=0:
-        node.upChild=up
+        puzzle.cost+=1
+        z3=TreeNode(node.key+1,node.cost+1,up,None,None,None,None,node)
+        node.upChild=z3
     if up!=0:
-        node.downChild=down
+        puzzle.cost+=1
+        z4=TreeNode(node.key+1,node.cost+1,down,None,None,None,None,node)
+        node.downChild=z4
 
 def right_to_left(lst, index):  # try moving right to left /"left"
     try:
@@ -159,8 +174,22 @@ def up_to_down(lst, index):  # try moving up to down/ "down"
     except IndexError:
         return 0
 
-def heuristic(puzzle,node):  #calculate f(n)
+def solve(node):
     return 0
+
+def heuristic(puzzle,node):  #calculate f(n)
+    g=node.cost
+    h=0
+    for i in range(3):
+        for j in range(3):
+            if node.payload[i][j]!=0 and node.payload[i][j]!=puzzle.goal[i][j]:
+                index_current=seeker(node.payload,node.payload[i][j]) #position of elem
+                index_goal=seeker(puzzle.goal,node.payload[i][j]) #position of elem in goal
+                d1=abs(index_goal[0]-index_current[0])
+                d2=abs(index_goal[1]-index_current[1])
+                h+=d1+d2
+    f=g+h
+    return f
 
 
 kzz=Puzzle(original,goal)
