@@ -2,12 +2,16 @@ import copy
 
 class Puzzle:
     def __init__(self,lst,goal):
-        self.root=TreeNode(0,0,lst,None,None,None,None,None)
+        self.root=TreeNode(0,0,lst,None,None,None,None,None,None,None)
         self.goal=goal
-        self.cost=None
+        self.cost=0
+        self.lowest=10^9
+        self.found=False
+        self.founded=None
 
 class TreeNode:
-    def __init__(self, key=0,cost=0, val=None, left=None, right=None, up=None, down=None, parent=None):
+    def __init__(self, key=0,cost=0, val=None, left=None, right=None, up=None, down=None, parent=None,move=None,actual=None):
+
         self.key = key
         self.cost= cost
         self.payload = val
@@ -16,13 +20,14 @@ class TreeNode:
         self.upChild = up
         self.downChild = down
         self.parent = parent
+        self.heuristic=None
+        self.move=move
+        self.actual=actual
 
-    def __iter__(self):
+    def __str__(self):
         if self.payload != 0:
             for i in range(3):
-                print(self.payload[i])
-        else:
-            print(0)
+                yield str((self.payload[i]))
 
     def hasLeftChild(self):
         return self.leftChild
@@ -77,11 +82,13 @@ class TreeNode:
             self.downChild.parent = self
 
 
-original = [[0, 2, 3], [1, 8, 4], [7, 6, 5]]
+original = [[1, 2, 3], [8, 0, 4], [7, 6, 5]]
 goal=[[2,8,3],[1,0,4],[7,6,5]]
-history = {}
+history = []
+history.append(original)
 current = original
 numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+done=False
 
 
 def print1(lst):
@@ -101,26 +108,26 @@ def seeker(lst,target):  # get position of empty or '0' (row,index)
             x = 0
 
 
-def position_tester(puzzle,node, index):
+def position_tester(puzzle,node, index):  #test left, right, up, down
     left=right_to_left(node.payload,index)
     right=left_to_right(node.payload,index)
     up=down_to_up(node.payload,index)
     down=up_to_down(node.payload,index)
-    if left!=0:
+    if left!=0:   #if it can move, it creates a child node
         puzzle.cost+=1
-        z1=TreeNode(node.key+1,node.cost+1,left,None,None,None,None,node)
+        z1=TreeNode(node.key+1,node.cost+1,left,None,None,None,None,node,'L',None)
         node.leftChild=z1
     if right!=0:
         puzzle.cost+=1
-        z2=TreeNode(node.key+1,node.cost+1,right,None,None,None,None,node)
+        z2=TreeNode(node.key+1,node.cost+1,right,None,None,None,None,node,'R',None)
         node.rightChild=z2
     if up!=0:
         puzzle.cost+=1
-        z3=TreeNode(node.key+1,node.cost+1,up,None,None,None,None,node)
+        z3=TreeNode(node.key+1,node.cost+1,up,None,None,None,None,node,'U',None)
         node.upChild=z3
-    if up!=0:
+    if down!=0:
         puzzle.cost+=1
-        z4=TreeNode(node.key+1,node.cost+1,down,None,None,None,None,node)
+        z4=TreeNode(node.key+1,node.cost+1,down,None,None,None,None,node,'D',None)
         node.downChild=z4
 
 def right_to_left(lst, index):  # try moving right to left /"left"
@@ -131,6 +138,10 @@ def right_to_left(lst, index):  # try moving right to left /"left"
             return 0
         lst1 = copy.deepcopy(lst)
         lst1[i0][i1 + 1], lst1[i0][i1] = lst1[i0][i1], lst1[i0][i1 + 1]
+        if lst1 in history:
+            return 0
+        else:
+            history.append(lst1)
         return lst1
     except IndexError:
         return 0
@@ -144,6 +155,10 @@ def left_to_right(lst, index):  # try moving left_to_right "right"
             return 0
         lst1 = copy.deepcopy(lst)
         lst1[i0][i1 - 1], lst1[i0][i1] = lst1[i0][i1], lst1[i0][i1 - 1]
+        if lst1 in history:
+            return 0
+        else:
+            history.append(lst1)
         return lst1
     except IndexError:
         return 0
@@ -157,6 +172,10 @@ def down_to_up(lst, index):  # try moving down to up / "up"
             return 0
         lst1 = copy.deepcopy(lst)
         lst1[i0 + 1][i1], lst1[i0][i1] = lst1[i0][i1], lst1[i0 + 1][i1]
+        if lst1 in history:
+            return 0
+        else:
+            history.append(lst1)
         return lst1
     except IndexError:
         return 0
@@ -170,12 +189,14 @@ def up_to_down(lst, index):  # try moving up to down/ "down"
             return 0
         lst1 = copy.deepcopy(lst)
         lst1[i0 + 1][i1], lst1[i0][i1] = lst1[i0][i1], lst1[i0 + 1][i1]
+        if lst1 in history:
+            return 0
+        else:
+            history.append(lst1)
         return lst1
     except IndexError:
         return 0
 
-def solve(node):
-    return 0
 
 def heuristic(puzzle,node):  #calculate f(n)
     g=node.cost
@@ -192,5 +213,65 @@ def heuristic(puzzle,node):  #calculate f(n)
     return f
 
 
-kzz=Puzzle(original,goal)
+def solve(puzzle,node):
+    zero=seeker(node.payload,0)
+    position_tester(puzzle,node,zero)
+    lowest=puzzle.lowest
+    if node.leftChild!=None:
+        nom=heuristic(puzzle,node.leftChild)
+        print(nom)
+        if lowest>nom:
+            lowest=nom
+            low=node.leftChild
+            node.leftChild.heuristic=low
+            node.actual=node.leftChild
+            if node.actual.payload==goal:
+                puzzle.found=True
+                puzzle.founded=node.actual
+    if node.rightChild!=None:
+        nom=heuristic(puzzle,node.rightChild)
+        print(nom)
+        if lowest>nom:
+            lowest=nom
+            low=node.rightChild
+            node.rightChild.heuristic=low
+            node.actual=node.rightChild
+            if node.actual.payload==goal:
+                puzzle.found=True
+                puzzle.founded=node.actual
+    if node.upChild!=None:
+        nom=heuristic(puzzle,node.upChild)
+        if lowest>nom:
+            lowest=nom
+            low=node.upChild
+            node.upChild.heuristic=low
+            node.actual=node.upChild
+            if node.actual.payload==goal:
+                puzzle.found=True
+                puzzle.founded=node.actual
+    if node.downChild!=None:
+        nom=heuristic(puzzle,node.downChild)
+        print(nom)
+        if lowest>nom:
+            lowest=nom
+            low=node.downChild
+            node.downChild.heuristic=low
+            node.actual=node.downChild
+            if node.actual.payload==goal:
+                puzzle.found=True
+                puzzle.founded=node.actual
+    k=node.actual
+    k.parent=node
+    if node.actual==puzzle.founded:
+        return puzzle.founded
+    elif puzzle.found==True:
+        return puzzle.founded
+    else:
+        k=solve(puzzle,node.actual)
+        return k
 
+
+
+kzz=Puzzle(original,goal)
+#kpp=solve(kzz,kzz.root)
+print(kzz.root)
