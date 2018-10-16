@@ -2,7 +2,7 @@ import copy
 
 class Puzzle:
     def __init__(self,lst,goal):
-        self.root=TreeNode(0,0,lst,None,None,None,None,None,None,None)
+        self.root=TreeNode(0,lst,None,None,None,None,None,None,None)
         self.goal=goal
         self.cost=0
         self.lowest=10^9
@@ -10,9 +10,7 @@ class Puzzle:
         self.founded=None
 
 class TreeNode:
-    def __init__(self, key=0,cost=0, val=None, left=None, right=None, up=None, down=None, parent=None,move=None,actual=None):
-
-        self.key = key
+    def __init__(self,cost, val, left=None, right=None, up=None, down=None, parent=None,move=None,actual=None):
         self.cost= cost
         self.payload = val
         self.leftChild = left
@@ -25,9 +23,7 @@ class TreeNode:
         self.actual=actual
 
     def __str__(self):
-        if self.payload != 0:
-            for i in range(3):
-                yield str((self.payload[i]))
+        return str(self.payload[0])+'\n'+str(self.payload[1])+'\n'+str(self.payload[2])
 
     def hasLeftChild(self):
         return self.leftChild
@@ -65,8 +61,7 @@ class TreeNode:
     def hasAllChildren(self):
         return self.rightChild and self.leftChild and self.upChild and self.downChild
 
-    def replaceNodeData(self, key, value, lc, rc, uc, dc):
-        self.key = key
+    def replaceNodeData(self, value, lc, rc, uc, dc):
         self.payload = value
         self.leftChild = lc
         self.rightChild = rc
@@ -113,21 +108,25 @@ def position_tester(puzzle,node, index):  #test left, right, up, down
     right=left_to_right(node.payload,index)
     up=down_to_up(node.payload,index)
     down=up_to_down(node.payload,index)
+    print(left)
+    print(right)
+    print(up)
+    print(down)
     if left!=0:   #if it can move, it creates a child node
         puzzle.cost+=1
-        z1=TreeNode(node.key+1,node.cost+1,left,None,None,None,None,node,'L',None)
+        z1=TreeNode(node.cost+1,left,None,None,None,None,node,'L',None)
         node.leftChild=z1
     if right!=0:
         puzzle.cost+=1
-        z2=TreeNode(node.key+1,node.cost+1,right,None,None,None,None,node,'R',None)
+        z2=TreeNode(node.cost+1,right,None,None,None,None,node,'R',None)
         node.rightChild=z2
     if up!=0:
         puzzle.cost+=1
-        z3=TreeNode(node.key+1,node.cost+1,up,None,None,None,None,node,'U',None)
+        z3=TreeNode(node.cost+1,up,None,None,None,None,node,'U',None)
         node.upChild=z3
     if down!=0:
         puzzle.cost+=1
-        z4=TreeNode(node.key+1,node.cost+1,down,None,None,None,None,node,'D',None)
+        z4=TreeNode(node.cost+1,down,None,None,None,None,node,'D',None)
         node.downChild=z4
 
 def right_to_left(lst, index):  # try moving right to left /"left"
@@ -185,10 +184,10 @@ def up_to_down(lst, index):  # try moving up to down/ "down"
     try:
         i0 = index[0]
         i1 = index[1]
-        if i0 == 0:  # prevent flipping
+        if i0 == 0 :  # prevent flipping
             return 0
         lst1 = copy.deepcopy(lst)
-        lst1[i0 + 1][i1], lst1[i0][i1] = lst1[i0][i1], lst1[i0 + 1][i1]
+        lst1[i0 - 1][i1], lst1[i0][i1] = lst1[i0][i1], lst1[i0 - 1][i1]
         if lst1 in history:
             return 0
         else:
@@ -216,11 +215,11 @@ def heuristic(puzzle,node):  #calculate f(n)
 def solve(puzzle,node):
     zero=seeker(node.payload,0)
     position_tester(puzzle,node,zero)
-    lowest=puzzle.lowest
     if node.leftChild!=None:
         nom=heuristic(puzzle,node.leftChild)
+        node.leftChild.heuristic=nom
         print(nom)
-        if lowest>nom:
+        if puzzle.lowest>nom:
             lowest=nom
             low=node.leftChild
             node.leftChild.heuristic=low
@@ -230,8 +229,9 @@ def solve(puzzle,node):
                 puzzle.founded=node.actual
     if node.rightChild!=None:
         nom=heuristic(puzzle,node.rightChild)
+        node.rightChild.heuristic=nom
         print(nom)
-        if lowest>nom:
+        if puzzle.lowest>nom:
             lowest=nom
             low=node.rightChild
             node.rightChild.heuristic=low
@@ -241,7 +241,8 @@ def solve(puzzle,node):
                 puzzle.founded=node.actual
     if node.upChild!=None:
         nom=heuristic(puzzle,node.upChild)
-        if lowest>nom:
+        node.upChild.heuristic=nom
+        if puzzle.lowest>nom:
             lowest=nom
             low=node.upChild
             node.upChild.heuristic=low
@@ -249,10 +250,12 @@ def solve(puzzle,node):
             if node.actual.payload==goal:
                 puzzle.found=True
                 puzzle.founded=node.actual
+        print('up')
     if node.downChild!=None:
         nom=heuristic(puzzle,node.downChild)
+        node.downChild.heuristic=nom
         print(nom)
-        if lowest>nom:
+        if puzzle.lowest>nom:
             lowest=nom
             low=node.downChild
             node.downChild.heuristic=low
@@ -260,18 +263,23 @@ def solve(puzzle,node):
             if node.actual.payload==goal:
                 puzzle.found=True
                 puzzle.founded=node.actual
-    k=node.actual
-    k.parent=node
-    if node.actual==puzzle.founded:
-        return puzzle.founded
-    elif puzzle.found==True:
-        return puzzle.founded
+        print('down')
+    if True:
+        return node.actual
     else:
-        k=solve(puzzle,node.actual)
-        return k
+        k=node.actual
+        k.parent=node
+        if node.actual==puzzle.founded:
+            return puzzle.founded
+        elif puzzle.found==True:
+            return puzzle.founded
+        else:
+            k=solve(puzzle,node.actual)
+            return k
 
 
 
 kzz=Puzzle(original,goal)
-#kpp=solve(kzz,kzz.root)
-print(kzz.root)
+kpp=solve(kzz,kzz.root)
+k=up_to_down(original,(1,1))
+print(kpp)
