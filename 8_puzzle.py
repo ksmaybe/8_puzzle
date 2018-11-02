@@ -23,7 +23,13 @@ class TreeNode:
         self.actual=actual
 
     def __str__(self):
-        return str(self.payload[0])+'\n'+str(self.payload[1])+'\n'+str(self.payload[2])
+        string1=""
+        string1+=str(self.payload[0])
+        string1+='\n'
+        string1+=str(self.payload[1])
+        string1+='\n'
+        string1+=str(self.payload[2])
+        return string1
 
     def hasLeftChild(self):
         return self.leftChild
@@ -108,10 +114,6 @@ def position_tester(puzzle,node, index):  #test left, right, up, down
     right=left_to_right(node.payload,index)
     up=down_to_up(node.payload,index)
     down=up_to_down(node.payload,index)
-    print(left)
-    print(right)
-    print(up)
-    print(down)
     if left!=0:   #if it can move, it creates a child node
         puzzle.cost+=1
         z1=TreeNode(node.cost+1,left,None,None,None,None,node,'L',None)
@@ -215,13 +217,13 @@ def heuristic(puzzle,node):  #calculate f(n)
 def solve(puzzle,node):
     zero=seeker(node.payload,0)
     position_tester(puzzle,node,zero)
+    low=999
     if node.leftChild!=None:
         nom=heuristic(puzzle,node.leftChild)
         node.leftChild.heuristic=nom
-        print(nom)
-        if puzzle.lowest>nom:
-            lowest=nom
-            low=node.leftChild
+        if low>nom:
+            if puzzle.lowest>nom:
+                puzzle.lowest=nom
             node.leftChild.heuristic=low
             node.actual=node.leftChild
             if node.actual.payload==goal:
@@ -230,10 +232,10 @@ def solve(puzzle,node):
     if node.rightChild!=None:
         nom=heuristic(puzzle,node.rightChild)
         node.rightChild.heuristic=nom
-        print(nom)
-        if puzzle.lowest>nom:
-            lowest=nom
-            low=node.rightChild
+        if low>nom:
+            if puzzle.lowest>nom:
+                puzzle.lowest=nom
+            low=nom
             node.rightChild.heuristic=low
             node.actual=node.rightChild
             if node.actual.payload==goal:
@@ -242,44 +244,51 @@ def solve(puzzle,node):
     if node.upChild!=None:
         nom=heuristic(puzzle,node.upChild)
         node.upChild.heuristic=nom
-        if puzzle.lowest>nom:
-            lowest=nom
-            low=node.upChild
+        if low>nom:
+            if puzzle.lowest>nom:
+                puzzle.lowest=nom
+            low=nom
             node.upChild.heuristic=low
             node.actual=node.upChild
             if node.actual.payload==goal:
                 puzzle.found=True
                 puzzle.founded=node.actual
-        print('up')
     if node.downChild!=None:
         nom=heuristic(puzzle,node.downChild)
         node.downChild.heuristic=nom
-        print(nom)
-        if puzzle.lowest>nom:
-            lowest=nom
-            low=node.downChild
+        if low>nom:
+            if puzzle.lowest>nom:
+                puzzle.lowest=nom
+            low=nom
             node.downChild.heuristic=low
             node.actual=node.downChild
             if node.actual.payload==goal:
                 puzzle.found=True
                 puzzle.founded=node.actual
-        print('down')
-    if True:
-        return node.actual
+    k=node.actual
+    k.parent=node
+    if node.actual==puzzle.founded:
+        return puzzle.founded
+    elif puzzle.found==True:
+        return puzzle.founded
     else:
-        k=node.actual
-        k.parent=node
-        if node.actual==puzzle.founded:
-            return puzzle.founded
-        elif puzzle.found==True:
-            return puzzle.founded
-        else:
-            k=solve(puzzle,node.actual)
-            return k
+        k=solve(puzzle,node.actual)
+        return k
 
 
 
 kzz=Puzzle(original,goal)
 kpp=solve(kzz,kzz.root)
-k=up_to_down(original,(1,1))
+str2=""
+node=kpp
+while node!=kzz.root:
+    str2+=node.move
+    str2+=' '
+    node=node.parent
+str1=''
+for i in range(len(str2)):
+    str1+=str2[-i-1]
+
+print(kzz.cost,kpp.cost)
+print(str1)
 print(kpp)
