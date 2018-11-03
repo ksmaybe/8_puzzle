@@ -4,10 +4,11 @@ class Puzzle:
     def __init__(self,lst,goal):
         self.root=TreeNode(0,lst,None,None,None,None,None,None,None)
         self.goal=goal
-        self.cost=0
+        self.cost=1
         self.lowest=10^9
         self.found=False
         self.founded=None
+        self.history=[]
 
 class TreeNode:
     def __init__(self,cost, val, left=None, right=None, up=None, down=None, parent=None,move=None,actual=None):
@@ -21,6 +22,7 @@ class TreeNode:
         self.heuristic=None
         self.move=move
         self.actual=actual
+        self.explore=False
 
     def __str__(self):
         string1=""
@@ -83,15 +85,6 @@ class TreeNode:
             self.downChild.parent = self
 
 
-original = [[2, 8, 3], [7, 1, 6], [0, 5, 4]]
-goal=[[1,2,3],[8,0,4],[7,6,5]]
-history = []
-history.append(original)
-current = original
-numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-done=False
-
-
 def print1(lst):
     if lst != 0:
         for i in range(3):
@@ -110,28 +103,28 @@ def seeker(lst,target):  # get position of empty or '0' (row,index)
 
 
 def position_tester(puzzle,node, index):  #test left, right, up, down
-    left=right_to_left(node.payload,index)
-    right=left_to_right(node.payload,index)
-    up=down_to_up(node.payload,index)
-    down=up_to_down(node.payload,index)
+    left=right_to_left(puzzle,node.payload,index)
+    right=left_to_right(puzzle,node.payload,index)
+    up=down_to_up(puzzle,node.payload,index)
+    down=up_to_down(puzzle,node.payload,index)
     if left!=0:   #if it can move, it creates a child node
         puzzle.cost+=1
-        z1=TreeNode(node.cost+1,left,None,None,None,None,node,'L',None)
+        z1=TreeNode(node.cost+1,left,None,None,None,None,node,'R',None)
         node.leftChild=z1
     if right!=0:
         puzzle.cost+=1
-        z2=TreeNode(node.cost+1,right,None,None,None,None,node,'R',None)
+        z2=TreeNode(node.cost+1,right,None,None,None,None,node,'L',None)
         node.rightChild=z2
     if up!=0:
         puzzle.cost+=1
-        z3=TreeNode(node.cost+1,up,None,None,None,None,node,'U',None)
+        z3=TreeNode(node.cost+1,up,None,None,None,None,node,'D',None)
         node.upChild=z3
     if down!=0:
         puzzle.cost+=1
-        z4=TreeNode(node.cost+1,down,None,None,None,None,node,'D',None)
+        z4=TreeNode(node.cost+1,down,None,None,None,None,node,'U',None)
         node.downChild=z4
 
-def right_to_left(lst, index):  # try moving right to left /"left"
+def right_to_left(puzzle,lst, index):  # try moving right to left /"left"
     try:
         i0 = index[0]
         i1 = index[1]
@@ -139,16 +132,16 @@ def right_to_left(lst, index):  # try moving right to left /"left"
             return 0
         lst1 = copy.deepcopy(lst)
         lst1[i0][i1 + 1], lst1[i0][i1] = lst1[i0][i1], lst1[i0][i1 + 1]
-        if lst1 in history:
+        if lst1 in puzzle.history:
             return 0
         else:
-            history.append(lst1)
+            puzzle.history.append(lst1)
         return lst1
     except IndexError:
         return 0
 
 
-def left_to_right(lst, index):  # try moving left_to_right "right"
+def left_to_right(puzzle,lst, index):  # try moving left_to_right "right"
     try:
         i0 = index[0]
         i1 = index[1]
@@ -156,16 +149,16 @@ def left_to_right(lst, index):  # try moving left_to_right "right"
             return 0
         lst1 = copy.deepcopy(lst)
         lst1[i0][i1 - 1], lst1[i0][i1] = lst1[i0][i1], lst1[i0][i1 - 1]
-        if lst1 in history:
+        if lst1 in puzzle.history:
             return 0
         else:
-            history.append(lst1)
+            puzzle.history.append(lst1)
         return lst1
     except IndexError:
         return 0
 
 
-def down_to_up(lst, index):  # try moving down to up / "up"
+def down_to_up(puzzle,lst, index):  # try moving down to up / "up"
     try:
         i0 = index[0]
         i1 = index[1]
@@ -173,16 +166,16 @@ def down_to_up(lst, index):  # try moving down to up / "up"
             return 0
         lst1 = copy.deepcopy(lst)
         lst1[i0 + 1][i1], lst1[i0][i1] = lst1[i0][i1], lst1[i0 + 1][i1]
-        if lst1 in history:
+        if lst1 in puzzle.history:
             return 0
         else:
-            history.append(lst1)
+            puzzle.history.append(lst1)
         return lst1
     except IndexError:
         return 0
 
 
-def up_to_down(lst, index):  # try moving up to down/ "down"
+def up_to_down(puzzle,lst, index):  # try moving up to down/ "down"
     try:
         i0 = index[0]
         i1 = index[1]
@@ -190,10 +183,10 @@ def up_to_down(lst, index):  # try moving up to down/ "down"
             return 0
         lst1 = copy.deepcopy(lst)
         lst1[i0 - 1][i1], lst1[i0][i1] = lst1[i0][i1], lst1[i0 - 1][i1]
-        if lst1 in history:
+        if lst1 in puzzle.history:
             return 0
         else:
-            history.append(lst1)
+            puzzle.history.append(lst1)
         return lst1
     except IndexError:
         return 0
@@ -266,18 +259,44 @@ def solve(puzzle,node):
                 puzzle.found=True
                 puzzle.founded=node.actual
     k=node.actual
+    node.explore=True
     k.parent=node
     if node.actual==puzzle.founded:
         return puzzle.founded
     elif puzzle.found==True:
         return puzzle.founded
-    else:
+    elif node.actual!=None:
         k=solve(puzzle,node.actual)
+        return k
+    else:
+        k=node.parent
+        k=solve(puzzle,k)
         return k
 
 
+number="283716054"
+goal2="123804765"
+original=[[],[],[]]
+goal =[[],[],[]]
+for i in range(3):
+    for j in range(3):
+        original[i].append(int(number[i*3+j]))
+
+for i in range(3):
+    for j in range(3):
+        goal[i].append(int(goal2[i*3+j]))
+print(original)
+print(goal)
+
+history = []
+history.append(original)
+
+
+current = original
+
 
 kzz=Puzzle(original,goal)
+kzz.history=history
 kpp=solve(kzz,kzz.root)
 str2=""
 node=kpp
@@ -289,6 +308,8 @@ str1=''
 for i in range(len(str2)):
     str1+=str2[-i-1]
 
-print(kzz.cost,kpp.cost)
+
 print(str1)
 print(kpp)
+print(kpp.cost)
+print(kzz.cost)
