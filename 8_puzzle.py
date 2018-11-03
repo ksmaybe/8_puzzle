@@ -83,8 +83,8 @@ class TreeNode:
             self.downChild.parent = self
 
 
-original = [[1, 2, 3], [8, 0, 4], [7, 6, 5]]
-goal=[[2,8,3],[1,0,4],[7,6,5]]
+original = [[2, 8, 3], [7, 1, 6], [0, 5, 4]]
+goal=[[1,2,3],[8,0,4],[7,6,5]]
 history = []
 history.append(original)
 current = original
