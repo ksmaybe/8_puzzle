@@ -7,8 +7,9 @@ class Puzzle:
         self.cost=1
         self.lowest=10^9
         self.found=False
-        self.founded=None
+        self.founded=True
         self.history=[]
+        self.frontier=[]
 
 class TreeNode:
     def __init__(self,cost, val, left=None, right=None, up=None, down=None, parent=None,move=None,actual=None):
@@ -214,58 +215,65 @@ def solve(puzzle,node):
     if node.leftChild!=None:
         nom=heuristic(puzzle,node.leftChild)
         node.leftChild.heuristic=nom
-        if low>nom:
-            if puzzle.lowest>nom:
-                puzzle.lowest=nom
-            node.leftChild.heuristic=low
-            node.actual=node.leftChild
-            if node.actual.payload==goal:
-                puzzle.found=True
-                puzzle.founded=node.actual
+        if node.explore==False:
+            if low>nom:
+                if puzzle.lowest>nom:
+                    puzzle.lowest=nom
+                node.leftChild.heuristic=low
+                node.actual=node.leftChild
+                if node.actual.payload==goal:
+                    puzzle.found=True
+                    puzzle.founded=node.actual
     if node.rightChild!=None:
         nom=heuristic(puzzle,node.rightChild)
         node.rightChild.heuristic=nom
-        if low>nom:
-            if puzzle.lowest>nom:
-                puzzle.lowest=nom
-            low=nom
-            node.rightChild.heuristic=low
-            node.actual=node.rightChild
-            if node.actual.payload==goal:
-                puzzle.found=True
-                puzzle.founded=node.actual
+        if node.explore==False:
+            if low>nom:
+                if puzzle.lowest>nom:
+                    puzzle.lowest=nom
+                low=nom
+                node.rightChild.heuristic=low
+                node.actual=node.rightChild
+                if node.actual.payload==goal:
+                    puzzle.found=True
+                    puzzle.founded=node.actual
     if node.upChild!=None:
         nom=heuristic(puzzle,node.upChild)
         node.upChild.heuristic=nom
-        if low>nom:
-            if puzzle.lowest>nom:
-                puzzle.lowest=nom
-            low=nom
-            node.upChild.heuristic=low
-            node.actual=node.upChild
-            if node.actual.payload==goal:
-                puzzle.found=True
-                puzzle.founded=node.actual
+        if node.explore==False:
+            if low>nom:
+                if puzzle.lowest>nom:
+                    puzzle.lowest=nom
+                low=nom
+                node.upChild.heuristic=low
+                node.actual=node.upChild
+                if node.actual.payload==goal:
+                    puzzle.found=True
+                    puzzle.founded=node.actual
     if node.downChild!=None:
         nom=heuristic(puzzle,node.downChild)
         node.downChild.heuristic=nom
-        if low>nom:
-            if puzzle.lowest>nom:
-                puzzle.lowest=nom
-            low=nom
-            node.downChild.heuristic=low
-            node.actual=node.downChild
-            if node.actual.payload==goal:
-                puzzle.found=True
-                puzzle.founded=node.actual
+        if node.explore==False:
+            if low>nom:
+                if puzzle.lowest>nom:
+                    puzzle.lowest=nom
+                low=nom
+                node.downChild.heuristic=low
+                node.actual=node.downChild
+                if node.actual.payload==goal:
+                    puzzle.found=True
+                    puzzle.founded=node.actual
     k=node.actual
     node.explore=True
-    k.parent=node
+
     if node.actual==puzzle.founded:
+        k.parent=node
         return puzzle.founded
     elif puzzle.found==True:
+        k.parent=node
         return puzzle.founded
-    elif node.actual!=None:
+    elif k!=None:
+        k.parent=node
         k=solve(puzzle,node.actual)
         return k
     else:
@@ -285,8 +293,6 @@ for i in range(3):
 for i in range(3):
     for j in range(3):
         goal[i].append(int(goal2[i*3+j]))
-print(original)
-print(goal)
 
 history = []
 history.append(original)
