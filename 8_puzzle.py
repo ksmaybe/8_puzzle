@@ -112,18 +112,22 @@ def position_tester(puzzle,node, index):  #test left, right, up, down
         puzzle.cost+=1
         z1=TreeNode(node.cost+1,left,None,None,None,None,node,'R',None)
         node.leftChild=z1
+        node.leftChild.parent=node
     if right!=0:
         puzzle.cost+=1
         z2=TreeNode(node.cost+1,right,None,None,None,None,node,'L',None)
         node.rightChild=z2
+        node.rightChild.parent=node
     if up!=0:
         puzzle.cost+=1
         z3=TreeNode(node.cost+1,up,None,None,None,None,node,'D',None)
         node.upChild=z3
+        node.upChild.parent=node
     if down!=0:
         puzzle.cost+=1
         z4=TreeNode(node.cost+1,down,None,None,None,None,node,'U',None)
         node.downChild=z4
+        node.downChild.parent=node
 
 def right_to_left(puzzle,lst, index):  # try moving right to left /"left"
     try:
@@ -207,102 +211,94 @@ def heuristic(puzzle,node):  #calculate f(n)
     f=g+h
     return f
 
+def a_search(puzzle):
+    dude=puzzle.frontier[-1]
+    for elem in puzzle.frontier:
+        if elem[0].explore==False:
+            if elem[1]<dude[1]:
+                dude=elem
+    return dude[0]
 
 def solve(puzzle,node):
     zero=seeker(node.payload,0)
     position_tester(puzzle,node,zero)
-    low=999
     if node.leftChild!=None:
         nom=heuristic(puzzle,node.leftChild)
         node.leftChild.heuristic=nom
-        if node.explore==False:
-            if low>nom:
-                if puzzle.lowest>nom:
-                    puzzle.lowest=nom
-                node.leftChild.heuristic=low
-                node.actual=node.leftChild
-                if node.actual.payload==goal:
-                    puzzle.found=True
-                    puzzle.founded=node.actual
+        puzzle.frontier.append((node.leftChild,nom))
+        if node.leftChild.payload==goal:
+            puzzle.found=True
+            puzzle.founded=node.leftChild
     if node.rightChild!=None:
         nom=heuristic(puzzle,node.rightChild)
         node.rightChild.heuristic=nom
-        if node.explore==False:
-            if low>nom:
-                if puzzle.lowest>nom:
-                    puzzle.lowest=nom
-                low=nom
-                node.rightChild.heuristic=low
-                node.actual=node.rightChild
-                if node.actual.payload==goal:
-                    puzzle.found=True
-                    puzzle.founded=node.actual
+        puzzle.frontier.append((node.rightChild,nom))
+        if node.rightChild.payload==goal:
+            puzzle.found=True
+            puzzle.founded=node.rightChild
     if node.upChild!=None:
         nom=heuristic(puzzle,node.upChild)
         node.upChild.heuristic=nom
-        if node.explore==False:
-            if low>nom:
-                if puzzle.lowest>nom:
-                    puzzle.lowest=nom
-                low=nom
-                node.upChild.heuristic=low
-                node.actual=node.upChild
-                if node.actual.payload==goal:
-                    puzzle.found=True
-                    puzzle.founded=node.actual
+        puzzle.frontier.append((node.upChild,nom))
+        if node.upChild.payload==goal:
+            puzzle.found=True
+            puzzle.founded=node.upChild
     if node.downChild!=None:
         nom=heuristic(puzzle,node.downChild)
         node.downChild.heuristic=nom
-        if node.explore==False:
-            if low>nom:
-                if puzzle.lowest>nom:
-                    puzzle.lowest=nom
-                low=nom
-                node.downChild.heuristic=low
-                node.actual=node.downChild
-                if node.actual.payload==goal:
-                    puzzle.found=True
-                    puzzle.founded=node.actual
-    k=node.actual
-    node.explore=True
+        puzzle.frontier.append((node.downChild,nom))
+        if node.downChild.payload==goal:
+            puzzle.found=True
+            puzzle.founded=node.downChild
 
-    if node.actual==puzzle.founded:
-        k.parent=node
+    node.explore=True
+    k=a_search(puzzle) #find the frontier node with lowest f(n)
+    if puzzle.found==True and puzzle.founded==k:
         return puzzle.founded
-    elif puzzle.found==True:
-        k.parent=node
-        return puzzle.founded
-    elif k!=None:
-        k.parent=node
-        k=solve(puzzle,node.actual)
-        return k
     else:
-        k=node.parent
         k=solve(puzzle,k)
         return k
 
 
-number="283716054"
-goal2="123804765"
+# number="283716054"
+# goal2="123804765"
 original=[[],[],[]]
 goal =[[],[],[]]
-for i in range(3):
-    for j in range(3):
-        original[i].append(int(number[i*3+j]))
+wow=[]
+input="Input2.txt"
+output="Output22.txt"
+f=open(input,'r')
+w=open(output,'w')
+lines=f.read().strip().split('\n')
+for i in range(len(lines)):
+    if i<4:
+        wow.append(lines[i])
+    elif i>3:
+        wow.append(lines[i])
+    w.write(lines[i]+'\n')
 
-for i in range(3):
-    for j in range(3):
-        goal[i].append(int(goal2[i*3+j]))
+for i in range(len(wow)):
+    if i<=2:
+        x=wow[i]
+        x1=x.split(' ')
+        print(x1)
+        for elem in x1:
+            if elem!='':
+                original[i].append(int(elem))
 
-history = []
-history.append(original)
-
+    if i>=4:
+        x=wow[i]
+        x1=x.split(' ')
+        for elem in x1:
+            if elem!='':
+                goal[i-4].append(int(elem))
 
 current = original
-
+print(original)
+print(goal)
 
 kzz=Puzzle(original,goal)
-kzz.history=history
+kzz.history.append(original)
 kpp=solve(kzz,kzz.root)
 str2=""
 node=kpp
@@ -319,3 +315,8 @@ print(str1)
 print(kpp)
 print(kpp.cost)
 print(kzz.cost)
+
+w.write('\n')
+w.write(str(kpp.cost)+'\n')
+w.write(str(kzz.cost)+'\n')
+w.write(str1+'\n')
