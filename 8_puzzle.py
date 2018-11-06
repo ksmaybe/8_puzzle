@@ -1,9 +1,9 @@
 import copy
 
-class Puzzle:
+class Puzzle:   #whole structure of the search
     def __init__(self,lst,goal):
         self.root=TreeNode(0,lst,None,None,None,None,None,None,None)
-        self.goal=goal
+        self.goal=goal  #
         self.cost=1
         self.lowest=10^9
         self.found=False
@@ -11,19 +11,19 @@ class Puzzle:
         self.history=[]
         self.frontier=[]
 
-class TreeNode:
+class TreeNode:   #tree of the search
     def __init__(self,cost, val, left=None, right=None, up=None, down=None, parent=None,move=None,actual=None):
-        self.cost= cost
-        self.payload = val
+        self.cost= cost    #cost of moving to the node/ g(n)
+        self.payload = val   #the state
         self.leftChild = left
         self.rightChild = right
         self.upChild = up
         self.downChild = down
         self.parent = parent
-        self.heuristic=None
-        self.move=move
+        self.heuristic=None   #f(n)
+        self.move=move       #which direction this node is moving,L,R,U,D
         self.actual=actual
-        self.explore=False
+        self.explore=False    #has it been explored
 
     def __str__(self):
         string1=""
@@ -136,11 +136,11 @@ def right_to_left(puzzle,lst, index):  # try moving right to left /"left"
         if i1 == 2:  # prevent [1,1,0] to [0,1,1]
             return 0
         lst1 = copy.deepcopy(lst)
-        lst1[i0][i1 + 1], lst1[i0][i1] = lst1[i0][i1], lst1[i0][i1 + 1]
-        if lst1 in puzzle.history:
+        lst1[i0][i1 + 1], lst1[i0][i1] = lst1[i0][i1], lst1[i0][i1 + 1]  #try moving the tiles
+        if lst1 in puzzle.history:        #graph search, ignore state previously explored
             return 0
         else:
-            puzzle.history.append(lst1)
+            puzzle.history.append(lst1)  #add this state to memory
         return lst1
     except IndexError:
         return 0
@@ -198,7 +198,7 @@ def up_to_down(puzzle,lst, index):  # try moving up to down/ "down"
 
 
 def heuristic(puzzle,node):  #calculate f(n)
-    g=node.cost
+    g=node.cost            #g(n)
     h=0
     for i in range(3):
         for j in range(3):
@@ -208,10 +208,10 @@ def heuristic(puzzle,node):  #calculate f(n)
                 d1=abs(index_goal[0]-index_current[0])
                 d2=abs(index_goal[1]-index_current[1])
                 h+=d1+d2
-    f=g+h
+    f=g+h   #f(n)=g(n)+h(n)
     return f
 
-def a_search(puzzle):
+def a_search(puzzle):   #find the lowest frontier node to explore
     dude=puzzle.frontier[-1]
     for elem in puzzle.frontier:
         if elem[0].explore==False:
@@ -220,15 +220,15 @@ def a_search(puzzle):
     return dude[0]
 
 def solve(puzzle,node):
-    zero=seeker(node.payload,0)
+    zero=seeker(node.payload,0)  #find empty position
     position_tester(puzzle,node,zero)
     if node.leftChild!=None:
         nom=heuristic(puzzle,node.leftChild)
         node.leftChild.heuristic=nom
-        puzzle.frontier.append((node.leftChild,nom))
-        if node.leftChild.payload==goal:
+        puzzle.frontier.append((node.leftChild,nom)) #add state to frontier
+        if node.leftChild.payload==goal:            #check if reached goal
             puzzle.found=True
-            puzzle.founded=node.leftChild
+            puzzle.founded=node.leftChild         #designate as goal node
     if node.rightChild!=None:
         nom=heuristic(puzzle,node.rightChild)
         node.rightChild.heuristic=nom
@@ -251,26 +251,24 @@ def solve(puzzle,node):
             puzzle.found=True
             puzzle.founded=node.downChild
 
-    node.explore=True
+    node.explore=True      #this node is explored, thus not a frontier node anymore
     k=a_search(puzzle) #find the frontier node with lowest f(n)
-    if puzzle.found==True and puzzle.founded==k:
+    if puzzle.found==True and puzzle.founded==k: #return if goal node found
         return puzzle.founded
     else:
-        k=solve(puzzle,k)
+        k=solve(puzzle,k)       #explore frontier node with lowest f(n)
         return k
 
 
-# number="283716054"
-# goal2="123804765"
 original=[[],[],[]]
 goal =[[],[],[]]
 wow=[]
-input="Input2.txt"
-output="Output22.txt"
+input="Input2.txt"              #type input file here
+output="Output22.txt"           #type output file here
 f=open(input,'r')
 w=open(output,'w')
 lines=f.read().strip().split('\n')
-for i in range(len(lines)):
+for i in range(len(lines)):     #read from input file and insert values to puzzle
     if i<4:
         wow.append(lines[i])
     elif i>3:
@@ -281,7 +279,6 @@ for i in range(len(wow)):
     if i<=2:
         x=wow[i]
         x1=x.split(' ')
-        print(x1)
         for elem in x1:
             if elem!='':
                 original[i].append(int(elem))
@@ -294,29 +291,30 @@ for i in range(len(wow)):
                 goal[i-4].append(int(elem))
 
 current = original
-print(original)
-print(goal)
+print1(original)                #print original puzzle
+print()
+print1(goal)                    #print intended state
 
-kzz=Puzzle(original,goal)
-kzz.history.append(original)
+kzz=Puzzle(original,goal)       #create frame for search
+kzz.history.append(original)    #original state added to memory
 kpp=solve(kzz,kzz.root)
 str2=""
 node=kpp
-while node!=kzz.root:
+while node!=kzz.root:           #go up from goal node to find all directions leading up to it
     str2+=node.move
     str2+=' '
     node=node.parent
 str1=''
-for i in range(len(str2)):
+for i in range(len(str2)):      #reverse the directions to find beginning
     str1+=str2[-i-1]
 
 
-print(str1)
-print(kpp)
-print(kpp.cost)
-print(kzz.cost)
 
-w.write('\n')
+print(kpp.cost)                 #print cost to get to goal
+print(kzz.cost)                 #print nodes found
+print(str1)                     #print directions to goal
+
+w.write('\n')                   #write to output file
 w.write(str(kpp.cost)+'\n')
 w.write(str(kzz.cost)+'\n')
 w.write(str1+'\n')
