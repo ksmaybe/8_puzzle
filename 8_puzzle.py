@@ -279,10 +279,6 @@ for i in range(len(wow)):
     if i<=2:
         x=wow[i]
         x1=x.split(' ')
-<<<<<<< Updated upstream
-=======
-        print(x1) 
->>>>>>> Stashed changes
         for elem in x1:
             if elem!='':
                 original[i].append(int(elem))
